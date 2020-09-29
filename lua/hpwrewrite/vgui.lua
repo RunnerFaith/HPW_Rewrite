@@ -1654,6 +1654,36 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 					end)
 				end)
 
+				local duplicate = Format(HpwRewrite.Language:GetWord("#duplicatetree"), oldname)
+				local duplicatebindtree = HpwRewrite.Language:GetWord("#duplicatebindtree")
+				menu:AddOption(duplicate, function()
+					local win = self:CreateWindow(200, 100)
+					win:SetTitle(duplicatebindtree)
+					win.lblTitle:SetFont("HPW_gui1")
+
+					local text = vgui.Create("DTextEntry", win)
+					text:SetPos(10, 30)
+					text:SetSize(180, 30)
+					text:SetText("")
+					text:SetFont("HPW_gui1")
+
+					local btn = self:CreateButton(enter, 10, 65, 180, 25, win, function(btn)
+						local newname = text:GetValue()
+
+						local data, filename = HpwRewrite.DM:ReadBinds()
+						if data and data[oldname] and data[newname] == nil and oldname != newname then
+							data[newname] = data[oldname]
+
+							file.Write(filename, util.TableToJSON(data))
+
+							reload()
+							loadTree(data[newname], newname)
+						end
+
+						win:Close()
+					end)
+				end)
+
 				menu:AddSpacer()
 
 				local name = Format(removetree, oldname)
