@@ -548,7 +548,7 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 		return self.Window
 	end
 
-	local win = self:CreateWindow(816, 600, true)
+	local win = self:CreateWindow(816, 630, true)
 	self.Window = win
 
 	local old = win.Paint
@@ -903,7 +903,7 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 
 	local skinsButtons = { }
 
-	AddSpells = function()
+	AddSpells = function(searchTerm)
 		-- Adding spell tree
 		if not newspells then
 			newspells = vgui.Create("HPWSpellTree", win)
@@ -968,6 +968,13 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 				local useless = { }
 				local function getPos() return defaultSize + 1 + #spellCategory.OtherButtons * 25 end
 
+				local function findSpell(spellName)
+					if searchTerm != nil and searchTerm != "" then
+						return spellName:lower():find(searchTerm:lower())
+					end
+					return "N/A"
+				end
+
 				for a, b in SortedPairs(HpwRewrite:GetSpells()) do
 					local cat = b.Category
 
@@ -977,6 +984,10 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 					
 					if (cat == k and not b.IsSkin) or (k == HpwRewrite.Language:GetWord("#favcategory") and HpwRewrite.FavouriteSpells[a]) then
 						if b.SecretSpell and not HpwRewrite:PlayerHasSpell(LocalPlayer(), a) then continue end
+
+						-- Don't create button if search doesn't match
+						if not findSpell(a) then continue end
+
 						if not HpwRewrite:CanUseSpell(LocalPlayer(), a) then
 							useless[a] = true
 							continue
@@ -1082,6 +1093,41 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 
 			table.insert(skinsButtons, btn)
 		end
+	end
+
+	-- Spell search bar
+	local spellSearch = vgui.Create("DTextEntry", win)
+	spellSearch:SetPos(0, 600)
+	spellSearch:SetSize(588, 30)
+	spellSearch:SetText("")
+	spellSearch:SetFont("HPW_gui1")
+	spellSearch:SetUpdateOnType(true)
+	spellSearch.Ghost = HpwRewrite.Language:GetWord("#searchspells")
+	spellSearch.OnChange = function(text)
+		if text:GetText() != "" then
+			spellSearch.Ghost = ""
+		else
+			spellSearch.Ghost = HpwRewrite.Language:GetWord("#searchspells")
+		end
+	end
+
+	spellSearch.OnValueChange = function(text)
+		AddSpells(text:GetText())
+	end
+
+	local oldPaint = spellSearch.Paint
+	spellSearch.Paint = function(self, w, h)
+		oldPaint(self, w, h)
+		draw.SimpleText(spellSearch.Ghost, "HPW_gui1", 3, 7, Color(55, 55, 55, 150))
+	end
+
+	-- Hide spell searchbar outside of spell list
+	local oldTabChanged = win.Sheet.OnActiveTabChanged
+	win.Sheet.OnActiveTabChanged = function(self, old, new)
+		oldTabChanged(self, old, new)
+		
+		local tabName = HpwRewrite.Language:GetWord("#spelllist")
+		spellSearch:SetVisible(new:GetText() == tabName and old:GetText() != tabName)
 	end
 
 	AddSpells()
