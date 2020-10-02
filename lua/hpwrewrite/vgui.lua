@@ -1606,10 +1606,12 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 									hook.Remove("Think", "hpwrewrite_waitforkeybind")
 
 									local val = tree:GetValue() != spellList and tree:GetValue() or text:GetValue()
-									if not HpwRewrite.BM:AddBindSpell(val, k, name) then
-										HpwRewrite:DoNotify(Format(HpwRewrite.Language:GetWord("#bindingerror"), HpwRewrite.BM.Keys[k]), 1)
+									if IsValid(win) and IsValid(win.CloseBtn) and not win.CloseBtn:IsDown() then
+										if not HpwRewrite.BM:AddBindSpell(val, k, name) then
+											HpwRewrite:DoNotify(Format(HpwRewrite.Language:GetWord("#bindingerror"), HpwRewrite.BM.Keys[k]), 1)
+										end
+										binding.ShouldUpdate = true
 									end
-									binding.ShouldUpdate = true
 
 									if IsValid(win) then win:Close() end
 								end
@@ -1657,7 +1659,7 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 									hook.Remove("Think", "hpwrewrite_waitforkeybind")
 
 									local data, filename
-									if oldKey != k then
+									if oldKey != k and IsValid(win) and IsValid(win.CloseBtn) and not win.CloseBtn:IsDown() then
 										data, fileName = HpwRewrite.BM:ModifyBindSpell(spell, oldKey, k, name)
 										if not data or filename then
 											HpwRewrite:DoNotify(Format(HpwRewrite.Language:GetWord("#bindingerror"), HpwRewrite.BM.Keys[k]), 1)
