@@ -1521,8 +1521,8 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 		local enter = HpwRewrite.Language:GetWord("#enter")
 		local untitled = HpwRewrite.Language:GetWord("#untitled")
 
-		local modifyBind = "Modify Bind"
-		local removeBind = "Remove Bind"
+		local modifyBind = HpwRewrite.Language:GetWord("#modifybind")
+		local removeBind = HpwRewrite.Language:GetWord("#removebind")
 
 		local sure2 = HpwRewrite.Language:GetWord("#sure2")
 		local yes = HpwRewrite.Language:GetWord("#yes")
