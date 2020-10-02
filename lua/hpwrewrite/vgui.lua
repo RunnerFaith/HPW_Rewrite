@@ -1642,9 +1642,9 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 		local btn = self:CreateButton(HpwRewrite.Language:GetWord("#options"), 456, 12, 105, 26, binding, function()
 			local menu = DermaMenu()
 
-			menu:AddOption(createtree, function()
+			local function createNamingWindow(title)
 				local win = self:CreateWindow(200, 100)
-				win:SetTitle(creator)
+				win:SetTitle(title)
 				win.lblTitle:SetFont("HPW_gui1")
 
 				local text = vgui.Create("DTextEntry", win)
@@ -1652,6 +1652,12 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 				text:SetSize(180, 30)
 				text:SetText("")
 				text:SetFont("HPW_gui1")
+
+				return win, text
+			end
+
+			menu:AddOption(createtree, function()
+				local win, text = createNamingWindow(creator)
 
 				local btn = self:CreateButton(enter, 10, 65, 180, 25, win, function(btn)
 					local val = text:GetValue()
@@ -1672,15 +1678,7 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 				local rename = Format(HpwRewrite.Language:GetWord("#renametree"), oldname)
 				local renamebindtree = HpwRewrite.Language:GetWord("#renamebindtree")
 				menu:AddOption(rename, function()
-					local win = self:CreateWindow(200, 100)
-					win:SetTitle(renamebindtree)
-					win.lblTitle:SetFont("HPW_gui1")
-
-					local text = vgui.Create("DTextEntry", win)
-					text:SetPos(10, 30)
-					text:SetSize(180, 30)
-					text:SetText("")
-					text:SetFont("HPW_gui1")
+					local win, text = createNamingWindow(renamebindtree)
 
 					local btn = self:CreateButton(enter, 10, 65, 180, 25, win, function(btn)
 						local val = text:GetValue()
@@ -1703,15 +1701,7 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 				local duplicate = Format(HpwRewrite.Language:GetWord("#duplicatetree"), oldname)
 				local duplicatebindtree = HpwRewrite.Language:GetWord("#duplicatebindtree")
 				menu:AddOption(duplicate, function()
-					local win = self:CreateWindow(200, 100)
-					win:SetTitle(duplicatebindtree)
-					win.lblTitle:SetFont("HPW_gui1")
-
-					local text = vgui.Create("DTextEntry", win)
-					text:SetPos(10, 30)
-					text:SetSize(180, 30)
-					text:SetText("")
-					text:SetFont("HPW_gui1")
+					local win, text = createNamingWindow(duplicatebindtree)
 
 					local btn = self:CreateButton(enter, 10, 65, 180, 25, win, function(btn)
 						local newname = text:GetValue()
