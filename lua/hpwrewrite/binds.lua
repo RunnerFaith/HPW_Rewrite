@@ -81,6 +81,31 @@ function HpwRewrite.BM:AddBindSpell(spell, key, tree)
 	return data, filename
 end
 
+function HpwRewrite.BM:ModifyBindSpell(spell, oldKey, newKey, tree)
+	if oldKey == newKey then return end
+	tree = tree or "Alpha"
+	local data, filename = HpwRewrite.DM:ReadBinds()
+
+	if data and data[tree] then
+		local changed = false
+		for k,v in pairs(data[tree]) do
+			if v.Key == oldKey then
+				data[tree][k].Key = newKey
+				changed = true
+			elseif v.Key == newKey then
+				return
+			end
+		end
+
+		if changed then
+			file.Write(filename, util.TableToJSON(data))
+			if tree == self.CurTree then self:Load(data[tree]) end
+		end
+	end
+
+	return data, filename
+end
+
 function HpwRewrite.BM:RemoveBindSpell(key, tree)
 	tree = tree or "Alpha"
 	local data, filename = HpwRewrite.DM:ReadBinds()

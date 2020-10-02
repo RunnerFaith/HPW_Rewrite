@@ -1521,6 +1521,9 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 		local enter = HpwRewrite.Language:GetWord("#enter")
 		local untitled = HpwRewrite.Language:GetWord("#untitled")
 
+		local modifyBind = "Modify Bind"
+		local removeBind = "Remove Bind"
+
 		local sure2 = HpwRewrite.Language:GetWord("#sure2")
 		local yes = HpwRewrite.Language:GetWord("#yes")
 		local no = HpwRewrite.Language:GetWord("#no")
@@ -1627,13 +1630,77 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 			if #ltree > 0 then
 				table.insert(btns, self:CreateLabel(HpwRewrite.Language:GetWord("#foundbinds"), 22, 258, binding))
 
+				local function removeSpellBind(key, name)
+					local data, filename = HpwRewrite.BM:RemoveBindSpell(key, name)
+
+					if data and data[name] then
+						loadTree(data[name], name)
+					end
+				end
+
+				local function modifySpellBind(oldKey, spell)
+					-- TODO: Implement modification functionality in HpwRewrite.BM
+					local win = self:CreateWindow(200, 100)
+					win:SetTitle(modifyBind)
+					win.lblTitle:SetFont("HPW_gui1")
+
+					local lbl = self:CreateLabel(HpwRewrite.Language:GetWord("#pressanykey"), 0, 0, win)
+					lbl:Dock(FILL)
+					lbl:SetContentAlignment(5)
+
+					timer.Simple(RealFrameTime(), function()
+						if not IsValid(win) then return end
+
+						hook.Add("Think", "hpwrewrite_waitforkeybind", function()
+							for k, v in pairs(HpwRewrite.BM.Keys) do
+								if k >= 107 and input.IsMouseDown(k) or input.IsKeyDown(k) then
+									hook.Remove("Think", "hpwrewrite_waitforkeybind")
+
+									local data, filename
+									if oldKey != k then
+										data, fileName = HpwRewrite.BM:ModifyBindSpell(spell, oldKey, k, name)
+										if not data or filename then
+											HpwRewrite:DoNotify(Format(HpwRewrite.Language:GetWord("#bindingerror"), HpwRewrite.BM.Keys[k]), 1)
+										end
+										binding.ShouldUpdate = true
+									end
+
+									if IsValid(win) then win:Close() end
+
+									-- Reload tree once modified
+									if data and data[name] then
+										loadTree(data[name], name)
+									end
+								end
+							end
+						end)
+					end)
+				end
+
 				for k, v in pairs(ltree) do
 					table.insert(btns, self:CreateButton(HpwRewrite.BM.Keys[v.Key] .. " - " .. v.Spell, 0, 310 + (k - 1) * 26, 575, 25, binding, function()
+						--[[ 
+						-- Old removal code
 						local data, filename = HpwRewrite.BM:RemoveBindSpell(v.Key, name)
 
 						if data and data[name] then
 							loadTree(data[name], name)
 						end
+						]]
+
+						-- Create menu to either modify/remove the selected bind
+						local menu = DermaMenu()
+
+						menu:AddOption(modifyBind, function()
+							modifySpellBind(v.Key, v.Spell)
+						end):SetIcon("icon16/pencil.png")
+
+						menu:AddOption(removeBind, function()
+							--print("Modifying Bind: " .. v.Spell .. " - " .. HpwRewrite.BM.Keys[v.Key])
+							removeSpellBind(v.Key, name)
+						end):SetIcon("icon16/bin_closed.png")
+
+						menu:Open()
 					end))
 				end
 			end
