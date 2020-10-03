@@ -29,7 +29,7 @@ local SpellLearning = false
 local progress = 0
 
 hook.Add("Think", "hpwrewrite_progressbarhandler", function()
-	if SpellLearning != HpwRewrite.Learning then
+	if SpellLening != HpwRewrite.Learning then
 		SpellLearning = HpwRewrite.Learning
 		if not SpellLearning then progress = 0 end
 	end
@@ -1103,15 +1103,22 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 	spellSearch:SetFont("HPW_gui1")
 	spellSearch:SetUpdateOnType(true)
 	spellSearch.Ghost = HpwRewrite.Language:GetWord("#searchspells")
-	spellSearch.OnChange = function(text)
+
+	spellSearch.OnValueChange = function(text)
 		if text:GetText() != "" then
-			spellSearch.Ghost = ""
+			local txt = text:GetText()
+			for k,v in SortedPairs(HpwRewrite:GetSpells()) do
+				if not v.IsSkin and txt:lower() == string.sub(k:lower(), 1, txt:len()) then
+					text.Ghost = txt .. string.sub(k, txt:len() + 1)
+					break
+				else
+					text.Ghost = ""
+				end
+			end
 		else
 			spellSearch.Ghost = HpwRewrite.Language:GetWord("#searchspells")
 		end
-	end
 
-	spellSearch.OnValueChange = function(text)
 		AddSpells(text:GetText())
 	end
 
@@ -1119,6 +1126,14 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 	spellSearch.Paint = function(self, w, h)
 		oldPaint(self, w, h)
 		draw.SimpleText(spellSearch.Ghost, "HPW_gui1", 3, 7, Color(55, 55, 55, 150))
+
+		-- Background change if no results are found
+		for _, currentCat in pairs(spells.SpellCats) do
+			if type(currentCat.OtherButtons) == "table" and #currentCat.OtherButtons > 0 then return end
+		end
+
+		local color = Color(255, 0, 0, 80)
+		draw.RoundedBox(0, 0, 0, w, h, color)
 	end
 
 	-- Hide spell searchbar outside of spell list
