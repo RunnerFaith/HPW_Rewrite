@@ -1537,6 +1537,7 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 		local untitled = HpwRewrite.Language:GetWord("#untitled")
 
 		local modifyBind = HpwRewrite.Language:GetWord("#modifybind")
+		local modifyKey = HpwRewrite.Language:GetWord("#modifykey")
 		local removeBind = HpwRewrite.Language:GetWord("#removebind")
 
 		local sure2 = HpwRewrite.Language:GetWord("#sure2")
@@ -1561,7 +1562,7 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 			tree:SetText(name)
 			oldname = name
 
-			local btn = self:CreateButton(createbind, 0, 50, sheetWidth, 60, binding, function()
+			local function createBindingWindow(callback)
 				local win = self:CreateWindow(400, 100)
 				win:SetTitle(bindmenu)
 				win.lblTitle:SetFont("HPW_gui1")
@@ -1609,6 +1610,11 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 					tree:AddChoice(k)
 				end
 
+				return win, text, tree
+			end
+
+			local btn = self:CreateButton(createbind, 0, 50, sheetWidth, 60, binding, function()
+				local win, text, tree = createBindingWindow()
 				local btn = self:CreateButton(enter, 10, 65, 380, 25, win, function(btn)
 					timer.Simple(RealFrameTime(), function()
 						if not IsValid(win) or not IsValid(btn) then return end
@@ -1655,7 +1661,22 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 					end
 				end
 
-				local function modifySpellBind(oldKey, spell)
+				local function modifySpellBind(oldSpell, name)
+					local win, text, tree = createBindingWindow()
+					local btn = self:CreateButton(enter, 10, 65, 380, 25, win, function(btn)
+						local val = tree:GetValue() != spellList and tree:GetValue() or text:GetValue()
+						if IsValid(win) and IsValid(win.CloseBtn) and not win.CloseBtn:IsDown() then
+							if not HpwRewrite.BM:ModifyBind(oldSpell, val, name) then
+								HpwRewrite:DoNotify(Format(HpwRewrite.Language:GetWord("#bindingerrorspell"), val), 1)
+							end
+							binding.ShouldUpdate = true
+						end
+
+						if IsValid(win) then win:Close() end
+					end)
+				end
+
+				local function modifySpellBindKey(oldKey, name)
 					local win = self:CreateWindow(200, 100)
 					win:SetTitle(modifyBind)
 					win.lblTitle:SetFont("HPW_gui1")
@@ -1673,20 +1694,14 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 									hook.Remove("Think", "hpwrewrite_waitforkeybind")
 
 									local data, filename
-									if oldKey != k and IsValid(win) and IsValid(win.CloseBtn) and not win.CloseBtn:IsDown() then
-										data, fileName = HpwRewrite.BM:ModifyBindSpell(spell, oldKey, k, name)
-										if not data or filename then
+									if IsValid(win) and IsValid(win.CloseBtn) and not win.CloseBtn:IsDown() then
+										if not HpwRewrite.BM:ModifyBindKey(oldKey, k, name) then
 											HpwRewrite:DoNotify(Format(HpwRewrite.Language:GetWord("#bindingerror"), HpwRewrite.BM.Keys[k]), 1)
 										end
 										binding.ShouldUpdate = true
 									end
 
 									if IsValid(win) then win:Close() end
-
-									-- Reload tree once modified
-									if data and data[name] then
-										loadTree(data[name], name)
-									end
 								end
 							end
 						end)
@@ -1699,8 +1714,14 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 						local menu = DermaMenu()
 
 						menu:AddOption(modifyBind, function()
-							modifySpellBind(v.Key, v.Spell)
+							modifySpellBind(v.Spell, name)
 						end):SetIcon("icon16/pencil.png")
+						
+						menu:AddOption(modifyKey, function()
+							modifySpellBindKey(v.Key, name)
+						end):SetIcon("icon16/pencil.png")
+
+						menu:AddSpacer()
 
 						menu:AddOption(removeBind, function()
 							removeSpellBind(v.Key, name)
