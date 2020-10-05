@@ -1656,7 +1656,6 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 				end
 
 				local function modifySpellBind(oldKey, spell)
-					-- TODO: Implement modification functionality in HpwRewrite.BM
 					local win = self:CreateWindow(200, 100)
 					win:SetTitle(modifyBind)
 					win.lblTitle:SetFont("HPW_gui1")
@@ -1696,15 +1695,6 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 
 				for k, v in pairs(ltree) do
 					table.insert(btns, self:CreateButton(HpwRewrite.BM.Keys[v.Key] .. " - " .. v.Spell, 0, 310 + (k - 1) * 26, 575, 25, binding, function()
-						--[[ 
-						-- Old removal code
-						local data, filename = HpwRewrite.BM:RemoveBindSpell(v.Key, name)
-
-						if data and data[name] then
-							loadTree(data[name], name)
-						end
-						]]
-
 						-- Create menu to either modify/remove the selected bind
 						local menu = DermaMenu()
 
@@ -1713,7 +1703,6 @@ function HpwRewrite.VGUI:OpenNewSpellManager()
 						end):SetIcon("icon16/pencil.png")
 
 						menu:AddOption(removeBind, function()
-							--print("Modifying Bind: " .. v.Spell .. " - " .. HpwRewrite.BM.Keys[v.Key])
 							removeSpellBind(v.Key, name)
 						end):SetIcon("icon16/bin_closed.png")
 
